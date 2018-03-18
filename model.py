@@ -1199,9 +1199,17 @@ def load_image_gt(dataset, config, image_id, augment=False,
 
     # Random horizontal flips.
     if augment:
-        if random.randint(0, 1):
+		augment_option = random.randint(0, 3)
+		if augment_option == 1:
             image = np.fliplr(image)
             mask = np.fliplr(mask)
+		elif augment_option == 2:
+			image = np.flipud(image)
+            mask = np.flipud(mask)
+		elif augment_option == 3:
+			image = np.flipud(np.fliplr(image))
+            mask = np.flipud(np.fliplr(mask))
+
 
     # Note that some boxes might be all zeros if the corresponding mask got cropped out.
     # and here is to filter them out
