@@ -18,6 +18,7 @@ import skimage.color
 import skimage.io
 import urllib.request
 import shutil
+import cv2
 
 # URL from which to download the latest COCO trained weights
 COCO_MODEL_URL = "https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5"
@@ -727,3 +728,19 @@ def download_trained_weights(coco_model_path, verbose=1):
         shutil.copyfileobj(resp, out)
     if verbose > 0:
         print("... done downloading pretrained model!")
+
+
+def adjust_gamma(image, gamma=1.0):
+    # build a lookup table mapping the pixel values [0, 255] to
+    # their adjusted gamma values
+    invGamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** invGamma) * 255 
+    for i in np.arange(0, 256)]).astype("uint8")
+    
+    img   = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+    img_adjust = cv2.LUT(img[:,:,0], table)
+    img[:,:,0] = img_adjust
+    image_gamma = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
+    
+    # apply gamma correction using the lookup table
+    return image_gamma

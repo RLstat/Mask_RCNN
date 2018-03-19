@@ -1199,6 +1199,12 @@ def load_image_gt(dataset, config, image_id, augment=False,
 
     # Random horizontal flips.
     if augment:
+        if config.ADJUST_GAMMA:
+            gamma_value = np.random.uniform(low = 0.5, 
+                                            high = 1.5, 
+                                            size = 1)[0]
+            image = utils.adjust_gamma(image, gamma=gamma_value)
+
         augment_option = random.randint(0, 3)
         if augment_option == 1:
             image = np.fliplr(image)
@@ -1829,7 +1835,8 @@ class MaskRCNN():
         # Bottom-up Layers
         # Returns a list of the last layers of each stage, 5 in total.
         # Don't create the thead (stage 5), so we pick the 4th item in the list.
-        _, C2, C3, C4, C5 = resnet_graph(input_image, "resnet101", stage5=True)
+        _, C2, C3, C4, C5 = resnet_graph(input_image, config.ARCHITECTURE, 
+                                         stage5=True)
         # Top-down Layers
         # TODO: add assert to varify feature map sizes match what's in config
         P5 = KL.Conv2D(256, (1, 1), name='fpn_c5p5')(C5)
