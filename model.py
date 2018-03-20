@@ -2082,7 +2082,7 @@ class MaskRCNN():
                                              momentum=momentum,
                                              clipnorm=5.0)
         if self.config.OPTIMIZER == "adam":
-            optimizer = keras.optimizers.Adam(lr=learning_rate)
+            optimizer = keras.optimizers.Adam(lr=learning_rate, clipnorm=5.0)
             
         # Add Losses
         # First, clear previously set losses to avoid duplication
