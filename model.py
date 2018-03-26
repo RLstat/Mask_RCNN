@@ -1204,6 +1204,10 @@ def load_image_gt(dataset, config, image_id, augment=False,
                                             high = 1.5, 
                                             size = 1)[0]
             image = utils.adjust_gamma(image, gamma=gamma_value)
+            
+        if config.INVERT_INTENSITY:
+            if random.randint(0,1):
+                image = utils.invert_intensity(image)
 
         augment_option = random.randint(0, 3)
         if augment_option == 1:
