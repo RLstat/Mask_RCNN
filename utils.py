@@ -16,9 +16,11 @@ import tensorflow as tf
 import scipy.misc
 import skimage.color
 import skimage.io
+import skimage.transform
 import urllib.request
 import shutil
 import cv2
+import warnings
 
 # URL from which to download the latest COCO trained weights
 COCO_MODEL_URL = "https://github.com/matterport/Mask_RCNN/releases/download/v2.0/mask_rcnn_coco.h5"
@@ -417,8 +419,8 @@ def resize_image(image, min_dim=None, max_dim=None, padding=False):
             scale = max_dim / image_max
     # Resize image and mask
     if scale != 1:
-        image = scipy.misc.imresize(
-            image, (round(h * scale), round(w * scale)))
+        image = skimage.transform.resize(image, (round(h * scale), round(w * scale)),
+                                         mode='constant', preserve_range=True)
     # Need padding?
     if padding:
         # Get new height and width
@@ -443,7 +445,9 @@ def resize_mask(mask, scale, padding):
             [(top, bottom), (left, right), (0, 0)]
     """
     h, w = mask.shape[:2]
-    mask = scipy.ndimage.zoom(mask, zoom=[scale, scale, 1], order=0)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        mask = scipy.ndimage.zoom(mask, zoom=[scale, scale, 1], order=0)
     mask = np.pad(mask, padding, mode='constant', constant_values=0)
     return mask
 
@@ -461,8 +465,8 @@ def minimize_mask(bbox, mask, mini_shape):
         m = m[y1:y2, x1:x2]
         if m.size == 0:
             raise Exception("Invalid bounding box with area of zero")
-        m = scipy.misc.imresize(m.astype(float), mini_shape, interp='bilinear')
-        mini_mask[:, :, i] = np.where(m >= 128, 1, 0)
+        m = skimage.transform.resize(m, mini_shape, order=1, mode="reflect")
+        mini_mask[:, :, i] = np.around(m).astype(np.bool)
     return mini_mask
 
 
@@ -478,8 +482,8 @@ def expand_mask(bbox, mini_mask, image_shape):
         y1, x1, y2, x2 = bbox[i][:4]
         h = y2 - y1
         w = x2 - x1
-        m = scipy.misc.imresize(m.astype(float), (h, w), interp='bilinear')
-        mask[y1:y2, x1:x2, i] = np.where(m >= 128, 1, 0)
+        m = skimage.transform.resize(m, (h, w), order=1, mode="reflect")
+        mask[y1:y2, x1:x2, i] = np.around(m).astype(np.bool)
     return mask
 
 
@@ -498,8 +502,8 @@ def unmold_mask(mask, bbox, image_shape):
     """
     threshold = 0.5
     y1, x1, y2, x2 = bbox
-    mask = scipy.misc.imresize(
-        mask, (y2 - y1, x2 - x1), interp='bilinear').astype(np.float32) / 255.0
+    mask = skimage.transform.resize(mask, (y2 - y1, x2 - x1),
+                                    order=1, mode="reflect")
     mask = np.where(mask >= threshold, 1, 0).astype(np.uint8)
 
     # Put the mask in the right location.
@@ -744,3 +748,9 @@ def adjust_gamma(image, gamma=1.0):
     
     # apply gamma correction using the lookup table
     return image_gamma
+
+def invert_intensity(img):
+    img   = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+    img[:,:,0] = 255 - img[:,:,0]  
+    img   = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
+    return img
