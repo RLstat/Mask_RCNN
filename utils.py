@@ -421,8 +421,6 @@ def resize_image(image, min_dim=None, max_dim=None, padding=False):
     if scale != 1:
         image = scipy.misc.imresize(
             image, (round(h * scale), round(w * scale)))
-        image = skimage.transform.resize(image, (round(h * scale), round(w * scale)),
-                                         mode='constant', preserve_range=True)
     # Need padding?
     if padding:
         # Get new height and width
@@ -447,9 +445,7 @@ def resize_mask(mask, scale, padding):
             [(top, bottom), (left, right), (0, 0)]
     """
     h, w = mask.shape[:2]
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        mask = scipy.ndimage.zoom(mask, zoom=[scale, scale, 1], order=0)
+    mask = scipy.ndimage.zoom(mask, zoom=[scale, scale, 1], order=0)
     mask = np.pad(mask, padding, mode='constant', constant_values=0)
     return mask
 
