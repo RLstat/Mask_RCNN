@@ -148,7 +148,9 @@ class Config(object):
     # train the RPN.
     USE_RPN_ROIS = True
     
-    ADJUST_GAMMA = True
+    ADJUST_GAMMA = False
+    
+    INVERT_INTENSITY = False
     
     ARCHITECTURE = "resnet101"
 
