@@ -19,7 +19,7 @@ import re
 import logging
 from collections import OrderedDict
 import numpy as np
-import skimage.transform
+import scipy.misc
 import tensorflow as tf
 import keras
 import keras.backend as K
@@ -1117,6 +1117,7 @@ def mrcnn_bbox_loss_graph(target_bbox, target_class_ids, pred_bbox):
                     smooth_l1_loss(y_true=target_bbox, y_pred=pred_bbox),
                     tf.constant(0.0))
     loss = K.mean(loss)
+    loss = K.reshape(loss, [1, 1])
     return loss
 
 
@@ -1156,6 +1157,7 @@ def mrcnn_mask_loss_graph(target_masks, target_class_ids, pred_masks):
                     K.binary_crossentropy(target=y_true, output=y_pred),
                     tf.constant(0.0))
     loss = K.mean(loss)
+    loss = K.reshape(loss, [1, 1])
     return loss
 
 
@@ -1389,16 +1391,16 @@ def build_detection_targets(rpn_rois, gt_class_ids, gt_boxes, gt_masks, config):
             gt_h = gt_y2 - gt_y1
             # Resize mini mask to size of GT box
             placeholder[gt_y1:gt_y2, gt_x1:gt_x2] = \
-                np.round(skimage.transform.resize(
-                        class_mask, (gt_h, gt_w), order=1, mode="reflect")).astype(bool)
+                np.round(scipy.misc.imresize(class_mask.astype(float), (gt_h, gt_w),
+                                             interp='nearest') / 255.0).astype(bool)
             # Place the mini batch in the placeholder
             class_mask = placeholder
 
         # Pick part of the mask and resize it
         y1, x1, y2, x2 = rois[i].astype(np.int32)
         m = class_mask[y1:y2, x1:x2]
-        mask = skimage.transform.resize(m, config.MASK_SHAPE,
-                                        order=1, mode="reflect")
+        mask = scipy.misc.imresize(
+            m.astype(float), config.MASK_SHAPE, interp='nearest') / 255.0
         masks[i, :, :, class_id] = mask
 
     return rois, roi_gt_class_ids, bboxes, masks
