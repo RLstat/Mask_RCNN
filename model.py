@@ -1193,25 +1193,35 @@ def load_image_gt(dataset, config, image_id, augment=False,
     if min(shape[:2]) >= config.IMAGE_MAX_DIM:
         h = shape[0]
         w = shape[1]
-        if h == config.IMAGE_MAX_DIM:
-            h_start = 0
-        else:
-            h_start = np.random.randint(0, h-config.IMAGE_MAX_DIM)
-        
-        if w == config.IMAGE_MAX_DIM:
-            w_start = 0
-        else:
-            w_start = np.random.randint(0, w-config.IMAGE_MAX_DIM)
+        ntrial = 0
+        mask_idx = np.array([])
+        while ((mask_idx.shape[0] == 0) and (ntrial < 10)):
+            if h == config.IMAGE_MAX_DIM:
+                h_start = 0
+            else:
+                h_start = np.random.randint(0, h-config.IMAGE_MAX_DIM)
             
-        image = image[h_start:(h_start + config.IMAGE_MAX_DIM), 
-                      w_start:(w_start + config.IMAGE_MAX_DIM), :3]
+            if w == config.IMAGE_MAX_DIM:
+                w_start = 0
+            else:
+                w_start = np.random.randint(0, w-config.IMAGE_MAX_DIM)
+                
+            cropped_image = image[h_start:(h_start + config.IMAGE_MAX_DIM), 
+                          w_start:(w_start + config.IMAGE_MAX_DIM), :3]
+            
+            cropped_mask  = mask[h_start:(h_start + config.IMAGE_MAX_DIM), 
+                          w_start:(w_start + config.IMAGE_MAX_DIM), :]
+            
+            mask_idx = np.where(np.sum(cropped_mask, axis=(0,1)) >= 
+                                config.MASK_THRESHOLD)[0]
+            
+            ntrial += 1
         
-        mask  = mask[h_start:(h_start + config.IMAGE_MAX_DIM), 
-                      w_start:(w_start + config.IMAGE_MAX_DIM), :]
+        if mask_idx.shape[0] > 0:
+            image = cropped_image
+            mask  = cropped_mask[:,:,mask_idx]
+            class_ids = class_ids[mask_idx]
         
-        mask_idx = np.where(np.sum(mask, axis=(0,1)) >= config.MASK_THRESHOLD)[0]
-        
-        mask  = mask[:,:,mask_idx]   
 
     image, window, scale, padding = utils.resize_image(
         image,
