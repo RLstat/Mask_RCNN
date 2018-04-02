@@ -1190,6 +1190,29 @@ def load_image_gt(dataset, config, image_id, augment=False,
     image = dataset.load_image(image_id)
     mask, class_ids = dataset.load_mask(image_id)
     shape = image.shape
+    if min(shape[:2]) >= config.IMAGE_MAX_DIM:
+        h = shape[0]
+        w = shape[1]
+        if h == config.IMAGE_MAX_DIM:
+            h_start = 0
+        else:
+            h_start = np.random.randint(0, h-config.IMAGE_MAX_DIM)
+        
+        if w == config.IMAGE_MAX_DIM:
+            w_start = 0
+        else:
+            w_start = np.random.randint(0, w-config.IMAGE_MAX_DIM)
+            
+        image = image[h_start:(h_start + config.IMAGE_MAX_DIM), 
+                      w_start:(w_start + config.IMAGE_MAX_DIM), :3]
+        
+        mask  = mask[h_start:(h_start + config.IMAGE_MAX_DIM), 
+                      w_start:(w_start + config.IMAGE_MAX_DIM), :]
+        
+        mask_idx = np.where(np.sum(mask, axis=(0,1)) >= config.MASK_THRESHOLD)[0]
+        
+        mask  = mask[:,:,mask_idx]   
+
     image, window, scale, padding = utils.resize_image(
         image,
         min_dim=config.IMAGE_MIN_DIM,
@@ -2551,12 +2574,13 @@ def mold_image(images, config):
     the mean pixel and converts it to float. Expects image
     colors in RGB order.
     """
-    return images.astype(np.float32) - config.MEAN_PIXEL
+    return (images.astype(np.float32) - config.MEAN_PIXEL)/config.PIXEL_SD
 
 
 def unmold_image(normalized_images, config):
     """Takes a image normalized with mold() and returns the original."""
-    return (normalized_images + config.MEAN_PIXEL).astype(np.uint8)
+    return (normalized_images*config.PIXEL_SD + config.MEAN_PIXEL).astype(np.uint8)
+
 
 
 ############################################################
