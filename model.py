@@ -2287,7 +2287,7 @@ class MaskRCNN():
         if os.name is 'nt':
             workers = 0
         else:
-            workers = multiprocessing.cpu_count()
+            workers = self.config.WORKER_CPU
 
         self.keras_model.fit_generator(
             train_generator,
