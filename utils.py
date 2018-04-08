@@ -752,6 +752,7 @@ def adjust_gamma(image, gamma=1.0):
     return image_gamma
 
 def invert_intensity(img):
+    img   = img.astype(np.uint8)
     img   = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
     img[:,:,0] = 255 - img[:,:,0]  
     img   = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
