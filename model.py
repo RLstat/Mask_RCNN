@@ -1242,6 +1242,9 @@ def load_image_gt(dataset, config, image_id, augment=False,
         if config.INVERT_INTENSITY:
             if random.randint(0,1):
                 image = utils.invert_intensity(image)
+                
+        if config.DO_SPECKLE_NOISE:
+            image = utils.do_speckle_noise(image)
 
         augment_option = random.randint(0, 3)
         if augment_option == 1:

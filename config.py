@@ -156,6 +156,8 @@ class Config(object):
     
     INVERT_INTENSITY = False
     
+    DO_SPECKLE_NOISE = False
+    
     MASK_THRESHOLD = 2
     
     ARCHITECTURE = "resnet101"

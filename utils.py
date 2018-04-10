@@ -757,3 +757,24 @@ def invert_intensity(img):
     img[:,:,0] = 255 - img[:,:,0]  
     img   = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
     return img
+
+def invert_intensity(img):
+    img   = img.astype(np.uint8)
+    img   = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+    img[:,:,0] = 255 - img[:,:,0]  
+    img   = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
+    return img
+
+def do_speckle_noise(image, sigma=0.5):
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    gray, a, b = cv2.split(lab)
+    gray = gray.astype(np.float32)/255
+    H,W  = gray.shape
+
+    noise = sigma*np.random.randn(H,W)
+    noisy = gray + gray * noise
+
+    noisy = (np.clip(noisy,0,1)*255).astype(np.uint8)
+    lab   = cv2.merge((noisy, a, b))
+    image = cv2.cvtColor(lab, cv2.COLOR_LAB2BGR)
+    return image
