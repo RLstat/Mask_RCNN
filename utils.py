@@ -421,7 +421,8 @@ def resize_image(image, min_dim=None, max_dim=None, padding=False):
     if scale != 1:
         image = skimage.transform.resize(
             image, (round(h * scale), round(w * scale)),
-            order=1, mode="constant", preserve_range=True)
+            order=1, mode="constant", preserve_range=True, 
+            anti_aliasing = True)
     # Need padding?
     if padding:
         # Get new height and width
@@ -750,13 +751,6 @@ def adjust_gamma(image, gamma=1.0):
     
     # apply gamma correction using the lookup table
     return image_gamma
-
-def invert_intensity(img):
-    img   = img.astype(np.uint8)
-    img   = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
-    img[:,:,0] = 255 - img[:,:,0]  
-    img   = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
-    return img
 
 def invert_intensity(img):
     img   = img.astype(np.uint8)
