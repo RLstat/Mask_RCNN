@@ -419,10 +419,12 @@ def resize_image(image, min_dim=None, max_dim=None, padding=False):
             scale = max_dim / image_max
     # Resize image and mask
     if scale != 1:
-        image = skimage.transform.resize(
-            image, (round(h * scale), round(w * scale)),
-            order=1, mode="constant", preserve_range=True, 
-            anti_aliasing = True)
+        image_minV = np.min(image)
+        image_maxV = np.max(image)
+        image = scipy.misc.imresize(
+                image, (round(h * scale), round(w * scale)))
+        if (image_maxV - image_minV) <= 1:
+            image = image/255
     # Need padding?
     if padding:
         # Get new height and width
