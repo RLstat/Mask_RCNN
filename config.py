@@ -152,6 +152,8 @@ class Config(object):
     # train the RPN.
     USE_RPN_ROIS = True
     
+    SAVE_EACH_WEIGHT = True
+    
     ADJUST_GAMMA = False
     
     INVERT_INTENSITY = False

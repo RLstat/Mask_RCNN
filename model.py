@@ -1218,9 +1218,9 @@ def load_image_gt(dataset, config, image_id, augment=False,
             class_ids = class_ids[mask_idx]
     elif ((max(shape[:2]) > config.IMAGE_MAX_DIM) and 
           (min(shape[:2]) < config.IMAGE_MAX_DIM)):
-        short      = np.min(shape)
-        long_axis  = np.argmax(shape)
-        long       = np.max(shape)
+        short      = np.min(shape[:2])
+        long_axis  = np.argmax(shape[:2])
+        long       = np.max(shape[:2])
         ntrial = 0
         mask_idx = np.array([])
         while ((mask_idx.shape[0] == 0) and (ntrial < 10)):
@@ -2246,10 +2246,15 @@ class MaskRCNN():
             self.config.NAME.lower(), now))
 
         # Path to save after each epoch. Include placeholders that get filled by Keras.
-        self.checkpoint_path = os.path.join(self.log_dir, "mask_rcnn_{}.h5".format(
-            self.config.NAME.lower()))
-        #self.checkpoint_path = self.checkpoint_path.replace(
-            #"*epoch*", "{epoch:04d}")
+        if self.config.SAVE_EACH_WEIGHT:
+            self.checkpoint_path = os.path.join(self.log_dir, "mask_rcnn_{}_*epoch*.h5".format(
+                    self.config.NAME.lower()))
+            self.checkpoint_path = self.checkpoint_path.replace(
+                "*epoch*", "{epoch:04d}")
+        else:        
+            self.checkpoint_path = os.path.join(self.log_dir, "mask_rcnn_{}.h5".format(
+                self.config.NAME.lower()))
+
 
     def train(self, train_dataset, val_dataset, learning_rate_multiplier, epochs, layers):
         """Train the model.
